@@ -45,16 +45,7 @@ const GameController = (function CreateController(GameBoard) {
         },
         updateBoard: function (row, col, symbol) {
             GameBoard.board[row][col] = symbol;
-            console.log(GameBoard.board);
         },
-        // playerMove: function (position, symbol) {
-        //     let row = Math.floor((position - 1) / 3);
-        //     let col = (position - 1) % 3;
-        //     if (this.GameBoard.board[row][col] === '')
-        //         this.GameBoard.board[row][col] = symbol;
-        //     else
-        //         console.log('Move not allowed');
-        // },
         checkWin: function (board, symbol) {
             let rowWin, colWin;
             let diagWin = 0;
@@ -88,6 +79,7 @@ const PageController = (function () {
     return {
         registerForm: document.getElementById('registerForm'),
         gameBoard: document.getElementById('gameBoard'),
+        board: document.getElementById('board'),
         p1Name: document.getElementById('p1'),
         p1Input: document.getElementById('p1-input'),
         score1: document.getElementById('s1'),
@@ -95,18 +87,29 @@ const PageController = (function () {
         p2Input: document.getElementById('p2-input'),
         score2: document.getElementById('s2'),
         startBtn: document.getElementById('start-btn'),
+        winner: document.getElementById('winner'),
+        restBtn: document.getElementById('restart-btn'),
         addPageEvents: function () {
             this.startBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.p1Name.textContent = this.p1Input.value;
                 this.p2Name.textContent = this.p2Input.value;
-                this.score1.textContent = '0';
-                this.score2.textContent = '0';
                 this.registerForm.style.display = 'none';
                 this.gameBoard.style.display = 'flex';
                 GameController.playersInit(this.p1Input.value, this.p2Input.value, 'X', 'O')
                 GameController.gameInit();
                 this.addCellEvents();
+                this.p1Input.value = ''
+                this.p2Input.value = ''
+            })
+            this.restBtn.addEventListener('click', () => {
+                this.board.innerHTML = ''
+                this.winner.textContent = ''
+                this.gameBoard.style.display = 'none'
+                this.registerForm.style.display = 'flex'
+                GameBoard.board = []
+                this.restBtn.classList.remove('block')
+                this.restBtn.classList.add('hidden')
             })
         },
         addCellEvents: function () {
@@ -121,12 +124,28 @@ const PageController = (function () {
                         const row = Math.floor(i / gridSize);
                         const col = i % gridSize;
                         GameController.updateBoard(row, col, currentSymbol);
+                        if (GameController.checkWin(GameBoard.board, currentSymbol)) {
+                            announceWin(currentSymbol)
+                            showRestartButton()
+                        }
                         toggleSymbol();
                     }
                 })
             }
+            const announceWin = (currentSymbol) => {
+                for (const player of GameController.players) {
+                    if (player.symbol === currentSymbol) {
+                        this.winner.textContent = player.name + " has won!";
+                    }
+                }
+            }
+            const showRestartButton = () => {
+                const restBtn = document.getElementById('restart-btn')
+                restBtn.classList.remove('hidden')
+                restBtn.classList.add('block')
+            }
         }
     }
-})(GameController);
+})(GameController, GameBoard);
 
 PageController.addPageEvents();
